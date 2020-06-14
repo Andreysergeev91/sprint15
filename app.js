@@ -10,9 +10,18 @@ const bodyParser = require('body-parser');
 
 const cookieParser = require('cookie-parser');
 
+const { celebrate, Joi } = require('celebrate');
+
+const { errors } = require('celebrate');
+
 const { createUser, login } = require('./controllers/users');
 
+const { requestLogger, errorLogger } = require('./middlewares/logger');
+
 const auth = require('./middlewares/auth');
+
+require('dotenv').config();
+
 
 const {
   PORT = 3000,
@@ -44,13 +53,27 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 // eslint-disable-next-line no-console
 }).catch((err) => console.error(err));
 
-app.post('/signup', createUser);
-app.post('/signin', login);
+app.use(requestLogger);
 
-app.use(auth);
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    about: Joi.string().required().min(2).max(30),
+    avatar: Joi.string().required(),
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), createUser);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
 
-app.use('/', require('./routes/users'));
-app.use('/', require('./routes/cards'));
+
+app.use('/', auth, require('./routes/users'));
+app.use('/', auth, require('./routes/cards'));
 
 
 app.all('*', (req, res) => {
@@ -59,5 +82,21 @@ app.all('*', (req, res) => {
   });
 });
 
+app.use(errorLogger);
+
+app.use(errors());
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+});
 
 app.listen(PORT);
