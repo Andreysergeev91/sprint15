@@ -7,7 +7,7 @@ API проекта Mesto позволяет пользователям созд�
 1. #### Создание пользователя:
 
 ```html
-POST https://project-mesto.ga/signup/
+POST https://api.project-mesto.ga/signup/
 ```
 Тело запроса, JSON-объект, который должен содержать следующие поля:
 ```json
@@ -36,7 +36,7 @@ POST https://project-mesto.ga/signup/
 2. #### Авторизация:
 
 ```html
-POST https://project-mesto.ga/signin/
+POST https://api.project-mesto.ga/signin/
 ```
 Тело запроса, JSON-объект, который должен содержать следующие поля:
 ```json
@@ -54,7 +54,7 @@ POST https://project-mesto.ga/signin/
 3. #### Просмотр всех пользователей:
 
 ```html
-GET https://project-mesto.ga/users/
+GET https://api.project-mesto.ga/users/
 ```
 Тело ответа, JSON-объект с массивом пользователей:
 ```json
@@ -69,7 +69,7 @@ GET https://project-mesto.ga/users/
 4. #### Просмотр конкретного пользователя:
 
 ```html
-GET https://project-mesto.ga/users/:userid
+GET https://api.project-mesto.ga/users/:userid
 ```
 параметр usedid - "_id" конкретного пользователя
 
@@ -88,7 +88,7 @@ GET https://project-mesto.ga/users/:userid
 5. #### Создание карточки:
 
 ```html
-POST https://project-mesto.ga/cards/
+POST https://api.project-mesto.ga/cards/
 ```
 Тело запроса, JSON-объект, который должен содержать следующие поля:
 ```json
@@ -113,7 +113,7 @@ POST https://project-mesto.ga/cards/
 6. #### Просмотр всех карточек:
 
 ```html
-GET https://project-mesto.ga/cards/
+GET https://api.project-mesto.ga/cards/
 ```
 Тело ответа, JSON-объект с массивом карточек:
 ```json
@@ -130,7 +130,7 @@ GET https://project-mesto.ga/cards/
 Удалить карточку может только тот пользователь, который её создал.
 
 ```html
-DELETE https://project-mesto.ga/cards/:cardId
+DELETE https://api.project-mesto.ga/cards/:cardId
 ```
 параметр cardId - "_id" конкретной карточки
 
