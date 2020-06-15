@@ -28,8 +28,8 @@ POST https://project-mesto.ga/signup/
             "about":"обо мне",
             "avatar":"ссылка на аватар",
             "email":"адрес электронной почты",
-            "password":"пароль"
-            "_v":0
+            "password":"пароль",
+             "_v":0
           }
 }
 ```
@@ -60,9 +60,9 @@ GET https://project-mesto.ga/users/
 ```json
 {
   "data":[
-         {...},
-         {...},
-         {...}
+         {},
+         {},
+         {}
          ]
 }
 ```
@@ -119,9 +119,9 @@ GET https://project-mesto.ga/cards/
 ```json
 {
   "data":[
-         {...},
-         {...},
-         {...}
+         {},
+         {},
+         {}
          ]
 }
 ```
