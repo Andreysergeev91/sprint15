@@ -10,9 +10,9 @@ const bodyParser = require('body-parser');
 
 const cookieParser = require('cookie-parser');
 
-const { celebrate, Joi } = require('celebrate');
-
 const { errors } = require('celebrate');
+
+const { validationForCreateUser, validationForLogin } = require('./routes/request-validation');
 
 const { createUser, login } = require('./controllers/users');
 
@@ -61,21 +61,8 @@ app.get('/crash-test', () => {
   }, 0);
 });
 
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
-    avatar: Joi.string().required(),
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }),
-}), createUser);
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().min(8),
-  }),
-}), login);
+app.post('/signup', validationForCreateUser, createUser);
+app.post('/signin', validationForLogin, login);
 
 
 app.use('/', auth, require('./routes/users'));
