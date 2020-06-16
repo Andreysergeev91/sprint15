@@ -1,6 +1,6 @@
 {
   "name": "sprint_14",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This project is intended to practice creating skills of server application with Express.js framework and MongoDb database.",
   "main": "index.js",
   "scripts": {
