@@ -2,34 +2,37 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { checkLinkValidation } = require('./errorLinkValidation');
+
+const { NODE_ENV, JWT_SECRET } = process.env;
+const getStatusCodeByError = require('./getStatusCodeByError');
+const NotfoundError = require('../middlewares/errors/not-found-error');
+const AuthorizationError = require('../middlewares/errors/authorization-error');
+const BadRequestError = require('../middlewares/errors/bad-request-error');
 
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(500).send({ data: err.message }));
+    .catch(next);
 };
 
-module.exports.getUsersById = (req, res) => {
+module.exports.getUsersById = (req, res, next) => {
   if (mongoose.Types.ObjectId.isValid(req.params.userId)) {
     User.findById(req.params.userId)
       .then((user) => {
         if (user == null) {
-          res.status(404).send({ data: 'Пользователь с данным Id не найден' });
+          throw new NotfoundError('Пользователь с данным Id не найден');
         } else {
           res.send({ data: user });
         }
       })
-      .catch((err) => {
-        res.status(500).send({ data: err.message });
-      });
+      .catch(next);
   } else {
-    res.status(400).send({ data: 'Введен некорректный id' });
+    next(new BadRequestError('Введен некорректный id'));
   }
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -38,15 +41,15 @@ module.exports.createUser = (req, res) => {
       name, about, avatar, email, password: hash,
     }))
     .then((user) => res.send({ data: user }))
-    .catch((err) => checkLinkValidation(res, err));
+    .catch((err) => getStatusCodeByError(err, next));
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
       res.cookie('jwt', token, {
         maxAge: 168 * 3600000,
         httpOnly: true,
@@ -54,8 +57,6 @@ module.exports.login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
+      next(new AuthorizationError(err.message));
     });
 };

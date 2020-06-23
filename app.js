@@ -10,9 +10,18 @@ const bodyParser = require('body-parser');
 
 const cookieParser = require('cookie-parser');
 
+const { errors } = require('celebrate');
+
+const { validationForCreateUser, validationForLogin } = require('./routes/request-validation');
+
 const { createUser, login } = require('./controllers/users');
 
+const { requestLogger, errorLogger } = require('./middlewares/logger');
+
 const auth = require('./middlewares/auth');
+
+require('dotenv').config();
+
 
 const {
   PORT = 3000,
@@ -44,13 +53,20 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 // eslint-disable-next-line no-console
 }).catch((err) => console.error(err));
 
-app.post('/signup', createUser);
-app.post('/signin', login);
+app.use(requestLogger);
 
-app.use(auth);
+app.get('/crash-test', () => {
+  setTimeout(() => {
+    throw new Error('Сервер сейчас упадёт');
+  }, 0);
+});
 
-app.use('/', require('./routes/users'));
-app.use('/', require('./routes/cards'));
+app.post('/signup', validationForCreateUser, createUser);
+app.post('/signin', validationForLogin, login);
+
+
+app.use('/', auth, require('./routes/users'));
+app.use('/', auth, require('./routes/cards'));
 
 
 app.all('*', (req, res) => {
@@ -59,5 +75,21 @@ app.all('*', (req, res) => {
   });
 });
 
+app.use(errorLogger);
+
+app.use(errors());
+
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+});
 
 app.listen(PORT);

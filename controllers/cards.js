@@ -1,21 +1,24 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
-const { checkLinkValidation } = require('./errorLinkValidation');
+const getStatusCodeByError = require('./getStatusCodeByError');
+const NotfoundError = require('../middlewares/errors/not-found-error');
+const ForbiddenError = require('../middlewares/errors/forbidden-error');
+const BadRequestError = require('../middlewares/errors/bad-request-error');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => res.status(500).send({ data: err.message }));
+    .catch(next);
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   if (mongoose.Types.ObjectId.isValid(req.params.cardId)) {
     Card.findById(req.params.cardId)
       .then((card) => {
         if (card == null) {
-          res.status(404).send({ data: 'Карточка с данным Id не найдена' });
+          throw new NotfoundError('Карточка с данным Id не найдена');
         } else if (JSON.stringify(card.owner) !== JSON.stringify(req.user._id)) {
-          res.status(403).send({ data: 'Карточка создана другим пользователем' });
+          throw new ForbiddenError('Карточка создана другим пользователем');
         } else {
           Card.deleteOne(card, (err) => {
             if (err) {
@@ -26,15 +29,15 @@ module.exports.deleteCard = (req, res) => {
           });
         }
       })
-      .catch((err) => res.status(500).send({ data: err.message }));
+      .catch(next);
   } else {
-    res.status(400).send({ data: 'Введен некорректный id карточки' });
+    next(new BadRequestError('Введен некорректный id карточки'));
   }
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
-    .catch((err) => { checkLinkValidation(res, err); });
+    .catch((err) => getStatusCodeByError(err, next));
 };
